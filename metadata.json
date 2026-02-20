@@ -1,0 +1,7 @@
+{
+  "name": "AI Egg Gender Predictor",
+  "description": "An application that uses AI to predict chick gender from an egg's shape, based on scientific research. It requires a batch number for each analysis and allows for downloading a CSV report of the results.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
