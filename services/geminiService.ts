@@ -1,14 +1,14 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { GenderPredictionResult, GroundingSource } from '../types';
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable is not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+const getGenAI = () => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("VITE_GEMINI_API_KEY is not set. AI features will not work.");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 const dataUriToGenerativePart = (uri: string) => {
     const [meta, data] = uri.split(',');
@@ -39,6 +39,15 @@ If the image is not a clear view of a single egg, or if the shape is ambiguous, 
 `;
 
 export const predictEggGender = async (imageData: string): Promise<GenderPredictionResult> => {
+    const ai = getGenAI();
+    if (!ai) {
+        return {
+            predictedGender: 'Uncertain',
+            confidence: 'Low',
+            reasoning: 'API Key is missing. Please configure VITE_GEMINI_API_KEY in your environment variables.'
+        };
+    }
+
     try {
         const imagePart = dataUriToGenerativePart(imageData);
         
@@ -73,6 +82,15 @@ export const predictEggGender = async (imageData: string): Promise<GenderPredict
 };
 
 export const predictEggGenderFromMeasurements = async (length: number, width: number, weight: number): Promise<GenderPredictionResult> => {
+    const ai = getGenAI();
+    if (!ai) {
+        return {
+            predictedGender: 'Uncertain',
+            confidence: 'Low',
+            reasoning: 'API Key is missing. Please configure VITE_GEMINI_API_KEY in your environment variables.'
+        };
+    }
+
     const shapeIndex = (width / length) * 100;
     const measurementPrompt = `
 As a poultry science expert, analyze the provided egg measurements based on the findings from the research paper 'High accuracy gender determination using the egg shape index'.
@@ -130,6 +148,14 @@ Provide your analysis in a JSON format with the following structure:
 
 
 export const getGroundedAnswer = async (query: string): Promise<{ text: string, sources: GroundingSource[] }> => {
+    const ai = getGenAI();
+    if (!ai) {
+        return {
+            text: "API Key is missing. Please configure VITE_GEMINI_API_KEY.",
+            sources: []
+        };
+    }
+
     try {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
