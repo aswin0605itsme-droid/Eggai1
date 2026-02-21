@@ -24,7 +24,7 @@ Make sure you have Node.js and npm installed on your local machine.
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/yourusername/EggGenderAI.git](https://github.com/yourusername/EggGenderAI.git)
+   git clone https://github.com/aswin0605itsme-droid/Eggai1
 Navigate to the project directory:
 
 Bash
