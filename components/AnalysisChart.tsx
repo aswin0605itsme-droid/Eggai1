@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import type { AnalysisRecord } from '../types';
-import { BarChart3, User, UserCheck } from 'lucide-react';
+import { BarChart3, User, UserCheck, Filter } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface AnalysisChartProps {
@@ -9,7 +9,19 @@ interface AnalysisChartProps {
 }
 
 const AnalysisChart: React.FC<AnalysisChartProps> = ({ records }) => {
-    const genderCounts = records.reduce((acc, record) => {
+    const [selectedBatch, setSelectedBatch] = useState<string>('all');
+
+    const uniqueBatches = useMemo(() => {
+        return Array.from(new Set(records.map(r => r.batchNumber))).sort();
+    }, [records]);
+
+    const filteredRecords = useMemo(() => {
+        return selectedBatch === 'all' 
+            ? records 
+            : records.filter(r => r.batchNumber === selectedBatch);
+    }, [records, selectedBatch]);
+
+    const genderCounts = filteredRecords.reduce((acc, record) => {
         if (record.gender === 'Male') {
             acc.Male++;
         } else if (record.gender === 'Female') {
@@ -19,8 +31,8 @@ const AnalysisChart: React.FC<AnalysisChartProps> = ({ records }) => {
     }, { Male: 0, Female: 0 });
 
     const total = genderCounts.Male + genderCounts.Female;
-    if (total === 0) return null;
-
+    
+    // Calculate percentages based on the filtered total
     const malePercentage = total > 0 ? (genderCounts.Male / total) * 100 : 0;
     const femalePercentage = total > 0 ? (genderCounts.Female / total) * 100 : 0;
 
@@ -48,36 +60,65 @@ const AnalysisChart: React.FC<AnalysisChartProps> = ({ records }) => {
         </div>
     );
 
+    if (records.length === 0) return null;
+
     return (
         <div className="glass-panel p-8 rounded-3xl" role="figure" aria-labelledby="chart-title">
-            <h2 id="chart-title" className="text-xl font-semibold text-white mb-8 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
-                    <BarChart3 className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                <h2 id="chart-title" className="text-xl font-semibold text-white flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
+                        <BarChart3 className="w-5 h-5" />
+                    </div>
+                    Analysis Summary
+                </h2>
+                
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Filter className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <select
+                        value={selectedBatch}
+                        onChange={(e) => setSelectedBatch(e.target.value)}
+                        className="pl-9 pr-4 py-2 bg-black/20 border border-white/10 rounded-xl text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 appearance-none cursor-pointer min-w-[160px]"
+                    >
+                        <option value="all">All Batches</option>
+                        {uniqueBatches.map(batch => (
+                            <option key={batch} value={batch}>{batch}</option>
+                        ))}
+                    </select>
                 </div>
-                Analysis Summary
-            </h2>
-            <div className="flex justify-around items-end border-b border-white/10 pb-8">
-                <Bar 
-                    label="Male" 
-                    count={genderCounts.Male} 
-                    percentage={malePercentage} 
-                    color="bg-gradient-to-t from-blue-600 to-cyan-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]" 
-                    icon={<User className="w-4 h-4 text-blue-400"/>} 
-                />
-                <div className="h-32 w-px bg-white/10"></div>
-                <Bar 
-                    label="Female" 
-                    count={genderCounts.Female} 
-                    percentage={femalePercentage} 
-                    color="bg-gradient-to-t from-pink-600 to-rose-500 shadow-[0_0_20px_rgba(236,72,153,0.3)]" 
-                    icon={<UserCheck className="w-4 h-4 text-pink-400"/>} 
-                />
             </div>
-            <div className="mt-6 text-center">
-                 <p className="text-sm text-gray-400 font-medium">
-                    Total Predictions: <span className="font-bold text-white text-lg ml-1">{total}</span>
-                 </p>
-            </div>
+
+            {total === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                    No records found for this batch.
+                </div>
+            ) : (
+                <>
+                    <div className="flex justify-around items-end border-b border-white/10 pb-8">
+                        <Bar 
+                            label="Male" 
+                            count={genderCounts.Male} 
+                            percentage={malePercentage} 
+                            color="bg-gradient-to-t from-blue-600 to-cyan-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]" 
+                            icon={<User className="w-4 h-4 text-blue-400"/>} 
+                        />
+                        <div className="h-32 w-px bg-white/10"></div>
+                        <Bar 
+                            label="Female" 
+                            count={genderCounts.Female} 
+                            percentage={femalePercentage} 
+                            color="bg-gradient-to-t from-pink-600 to-rose-500 shadow-[0_0_20px_rgba(236,72,153,0.3)]" 
+                            icon={<UserCheck className="w-4 h-4 text-pink-400"/>} 
+                        />
+                    </div>
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-400 font-medium">
+                            Total Predictions: <span className="font-bold text-white text-lg ml-1">{total}</span>
+                        </p>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

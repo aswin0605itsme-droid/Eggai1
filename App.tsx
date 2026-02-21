@@ -1,15 +1,14 @@
 
 import React, { useState } from 'react';
-import { Camera, Image as ImageIcon, Sparkles, Download, Calculator, Github, Egg } from 'lucide-react';
+import { Camera, Image as ImageIcon, Download, Calculator, Github, Egg } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ImageAnalyzer from './components/ImageAnalyzer';
 import LiveAnalyzer from './components/LiveAnalyzer';
-import ExpertChat from './components/ExpertChat';
 import ShapeIndexCalculator from './components/ShapeIndexCalculator';
 import AnalysisChart from './components/AnalysisChart';
 import type { AnalysisRecord } from './types';
 
-type Tab = 'image' | 'live' | 'calculator' | 'chat';
+type Tab = 'image' | 'live' | 'calculator';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('image');
@@ -55,8 +54,6 @@ const App: React.FC = () => {
         return <LiveAnalyzer onAnalysisComplete={handleNewRecord} />;
       case 'calculator':
         return <ShapeIndexCalculator onAnalysisComplete={handleNewRecord} />;
-      case 'chat':
-        return <ExpertChat />;
       default:
         return <ImageAnalyzer onAnalysisComplete={handleNewRecord} />;
     }
@@ -66,7 +63,6 @@ const App: React.FC = () => {
     { id: 'image', label: 'Analyze Image', icon: ImageIcon },
     { id: 'live', label: 'Live Camera', icon: Camera },
     { id: 'calculator', label: 'Calculator', icon: Calculator },
-    { id: 'chat', label: 'Ask Expert', icon: Sparkles },
   ];
 
   return (
@@ -110,7 +106,7 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-3">
-            <nav className="space-y-2 sticky top-24">
+            <nav className="space-y-2 sticky top-24 flex flex-col">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -183,7 +179,7 @@ const App: React.FC = () => {
       <footer className="mt-20 border-t border-white/5 py-8 text-center">
         <p className="text-gray-500 text-sm mb-4">&copy; {new Date().getFullYear()} AI Egg Gender Predictor. Precision Analytics.</p>
         <a 
-          href="https://github.com/example/ai-egg-predictor"
+          href="https://github.com/aswin0605itsme-droid/Eggai1"
           target="_blank" 
           rel="noopener noreferrer" 
           className="inline-flex items-center gap-2 text-gray-600 hover:text-white transition-colors text-sm"
