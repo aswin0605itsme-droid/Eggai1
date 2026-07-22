@@ -21,30 +21,22 @@ const dataUriToGenerativePart = (uri: string) => {
     };
 };
 
-const imagePrompt = `
-As a poultry science expert, analyze the provided egg image to predict the chick's gender with high precision.
+const imagePrompt = `You are an expert agricultural AI assistant specializing in poultry science. I will provide you with an image of an egg. Your task is to analyze the morphology of the egg to predict the likely gender of the chick inside based on the Shape Index principle.
 
-**Analysis Criteria:**
-1.  **Shape Index (Visual Estimation):**
-    *   **Female:** Look for a high shape index. The egg should appear significantly oval, rounded, or "blunt" on both ends.
-    *   **Male:** Look for a low shape index. The egg should appear elongated, pointed, or have a distinct "sharp" end.
-2.  **Symmetry:**
-    *   Male eggs often show more asymmetry (one end much more pointed than the other).
-    *   Female eggs are often more symmetrical and uniform.
+Follow these rules for your analysis:
 
-**Instructions:**
-*   Analyze the contour of the egg carefully.
-*   If the image contains multiple eggs, focus on the most prominent one or return "Uncertain" if it's too cluttered.
-*   If the image is blurry, dark, or the egg is obscured, return "Uncertain".
+Observe the roundness versus the elongation of the egg.
 
-**Output Format:**
-Provide your analysis in a JSON format with the following structure:
+Rounder, wider eggs with a higher shape index tend to be female.
+
+Narrower, more elongated/pointy eggs with a lower shape index tend to be male.
+
+Return your final analysis strictly in the following JSON format without any markdown formatting or additional text:
 {
-  "predictedGender": "Male" | "Female" | "Uncertain",
-  "confidence": "High" | "Medium" | "Low",
-  "reasoning": "A detailed explanation citing specific visual features (e.g., 'pointed tip', 'rounded symmetry') that led to the conclusion."
-}
-`;
+"predicted_gender": "Male" or "Female",
+"confidence_level": "High", "Medium", or "Low",
+"morphology_analysis": "A brief 1-sentence explanation of the shape observed (e.g., 'The egg exhibits a highly elongated shape tapering at one end.')."
+}`;
 
 export const predictEggGender = async (imageData: string): Promise<GenderPredictionResult> => {
     const ai = getGenAI();
@@ -67,18 +59,23 @@ export const predictEggGender = async (imageData: string): Promise<GenderPredict
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        predictedGender: { type: Type.STRING },
-                        confidence: { type: Type.STRING },
-                        reasoning: { type: Type.STRING },
+                        predicted_gender: { type: Type.STRING },
+                        confidence_level: { type: Type.STRING },
+                        morphology_analysis: { type: Type.STRING },
                     },
-                    required: ["predictedGender", "confidence", "reasoning"],
+                    required: ["predicted_gender", "confidence_level", "morphology_analysis"],
                 },
             },
         });
         
         const text = response.text.trim();
         const result = JSON.parse(text);
-        return result as GenderPredictionResult;
+        
+        return {
+            predictedGender: result.predicted_gender,
+            confidence: result.confidence_level,
+            reasoning: result.morphology_analysis
+        } as GenderPredictionResult;
     } catch (error) {
         console.error("Error predicting egg gender:", error);
         return {
