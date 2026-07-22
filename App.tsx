@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, Image as ImageIcon, Calculator, Egg, Menu, X, Download, Github } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ImageAnalyzer from './components/ImageAnalyzer';
 import LiveAnalyzer from './components/LiveAnalyzer';
 import ShapeIndexCalculator from './components/ShapeIndexCalculator';
 import AnalysisChart from './components/AnalysisChart';
+import { saveRecord, getRecords } from './services/storageService';
 import type { AnalysisRecord } from './types';
 
 type Tab = 'image' | 'live' | 'calculator';
@@ -13,9 +14,34 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('image');
   const [analysisRecords, setAnalysisRecords] = useState<AnalysisRecord[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [loadingRecords, setLoadingRecords] = useState(false);
 
-  const handleNewRecord = (record: AnalysisRecord) => {
-    setAnalysisRecords(prev => [...prev, record]);
+  useEffect(() => {
+    const fetchRecords = async () => {
+      setLoadingRecords(true);
+      try {
+        const records = await getRecords();
+        setAnalysisRecords(records);
+      } catch (error) {
+        console.error("Failed to fetch records:", error);
+      } finally {
+        setLoadingRecords(false);
+      }
+    };
+
+    fetchRecords();
+  }, []);
+
+  const handleNewRecord = async (record: AnalysisRecord) => {
+    // Optimistic update
+    setAnalysisRecords(prev => [record, ...prev]);
+    
+    try {
+      await saveRecord(record);
+    } catch (error) {
+      console.error("Failed to save record:", error);
+      // Revert optimistic update if needed, but for now we'll just log it
+    }
   };
 
   const downloadCSV = () => {
@@ -82,7 +108,7 @@ const App: React.FC = () => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen
+        fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen flex flex-col
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="p-6">
@@ -97,7 +123,7 @@ const App: React.FC = () => {
           <p className="text-[10px] text-gray-500 font-medium tracking-widest uppercase ml-11">Next-Gen Poultry Analytics</p>
         </div>
 
-        <nav className="px-4 mt-6 space-y-2">
+        <nav className="px-4 space-y-2 flex-1 mt-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -126,12 +152,12 @@ const App: React.FC = () => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 space-y-4">
            <a 
             href="https://github.com/aswin0605itsme-droid/Eggai1"
             target="_blank" 
             rel="noopener noreferrer" 
-            className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors justify-center"
           >
             <Github className="w-4 h-4" />
             View Source

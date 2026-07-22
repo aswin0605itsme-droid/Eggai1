@@ -22,20 +22,28 @@ const dataUriToGenerativePart = (uri: string) => {
 };
 
 const imagePrompt = `
-As a poultry science expert, analyze the provided egg image based on the findings from the research paper 'High accuracy gender determination using the egg shape index'.
+As a poultry science expert, analyze the provided egg image to predict the chick's gender with high precision.
 
-The paper indicates a strong correlation between egg shape and chick gender:
-- **Female:** Associated with a high shape index, meaning the egg is more oval or rounded.
-- **Male:** Associated with a low shape index, meaning the egg is more pointed or elongated.
+**Analysis Criteria:**
+1.  **Shape Index (Visual Estimation):**
+    *   **Female:** Look for a high shape index. The egg should appear significantly oval, rounded, or "blunt" on both ends.
+    *   **Male:** Look for a low shape index. The egg should appear elongated, pointed, or have a distinct "sharp" end.
+2.  **Symmetry:**
+    *   Male eggs often show more asymmetry (one end much more pointed than the other).
+    *   Female eggs are often more symmetrical and uniform.
 
-Based on the visual shape of the egg in the image, please predict the gender of the chick. Provide your analysis in a JSON format with the following structure:
+**Instructions:**
+*   Analyze the contour of the egg carefully.
+*   If the image contains multiple eggs, focus on the most prominent one or return "Uncertain" if it's too cluttered.
+*   If the image is blurry, dark, or the egg is obscured, return "Uncertain".
+
+**Output Format:**
+Provide your analysis in a JSON format with the following structure:
 {
   "predictedGender": "Male" | "Female" | "Uncertain",
   "confidence": "High" | "Medium" | "Low",
-  "reasoning": "A brief explanation for your prediction based on the egg's shape."
+  "reasoning": "A detailed explanation citing specific visual features (e.g., 'pointed tip', 'rounded symmetry') that led to the conclusion."
 }
-
-If the image is not a clear view of a single egg, or if the shape is ambiguous, return "Uncertain" with an explanatory comment.
 `;
 
 export const predictEggGender = async (imageData: string): Promise<GenderPredictionResult> => {
@@ -93,25 +101,28 @@ export const predictEggGenderFromMeasurements = async (length: number, width: nu
 
     const shapeIndex = (width / length) * 100;
     const measurementPrompt = `
-As a poultry science expert, analyze the provided egg measurements based on the findings from the research paper 'High accuracy gender determination using the egg shape index'.
+As a poultry science expert, analyze the provided egg measurements to predict the chick's gender.
 
-The paper indicates a strong correlation between egg shape and chick gender:
-- **Female:** Associated with a high shape index (e.g., > 74), meaning the egg is more oval or rounded.
-- **Male:** Associated with a low shape index (e.g., < 74), meaning the egg is more pointed or elongated.
+**Scientific Basis:**
+*   **Shape Index (SI = Width/Length * 100):**
+    *   **SI < 72:** Strongly indicates **Male** (Elongated/Pointed).
+    *   **SI > 76:** Strongly indicates **Female** (Round/Oval).
+    *   **SI 72-76:** Transition zone. Look at weight as a secondary factor.
+*   **Weight:**
+    *   Heavier eggs in a batch *can* sometimes skew male, but this is breed-dependent and less reliable than shape. Use this only to tip the scale in the transition zone.
 
-The provided measurements are:
-- Long Axis (Length): ${length.toFixed(2)} mm
-- Short Axis (Width): ${width.toFixed(2)} mm
-- Weight: ${weight.toFixed(2)} g
-- Calculated Shape Index: ${shapeIndex.toFixed(2)}
+**Data:**
+*   Long Axis (Length): ${length.toFixed(2)} mm
+*   Short Axis (Width): ${width.toFixed(2)} mm
+*   Weight: ${weight.toFixed(2)} g
+*   Calculated Shape Index: ${shapeIndex.toFixed(2)}
 
-Based on these measurements, please predict the gender of the chick. Egg weight can also be a factor, with some studies suggesting a slight correlation. Consider all factors in your analysis.
-
+**Output Format:**
 Provide your analysis in a JSON format with the following structure:
 {
   "predictedGender": "Male" | "Female" | "Uncertain",
   "confidence": "High" | "Medium" | "Low",
-  "reasoning": "A brief explanation for your prediction based on the shape index and weight."
+  "reasoning": "Explain the decision based on the Shape Index threshold and how weight influenced the outcome."
 }
 `;
 
@@ -145,7 +156,6 @@ Provide your analysis in a JSON format with the following structure:
         };
     }
 };
-
 
 export const getGroundedAnswer = async (query: string): Promise<{ text: string, sources: GroundingSource[] }> => {
     const ai = getGenAI();

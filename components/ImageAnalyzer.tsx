@@ -30,7 +30,7 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ onAnalysisComplete }) => 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const newFiles = Array.from(event.target.files).map((file: File) => ({
-        id: `${file.name}-${file.lastModified}`,
+        id: crypto.randomUUID(),
         file,
         preview: URL.createObjectURL(file)
       }));
@@ -178,7 +178,7 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ onAnalysisComplete }) => 
 
                 <button
                     onClick={handleAnalyze}
-                    disabled={files.length === 0 || !batchNumber.trim() || loading}
+                    disabled={files.length === 0 || loading}
                     className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-purple-900/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] mt-4"
                 >
                     {loading ? (

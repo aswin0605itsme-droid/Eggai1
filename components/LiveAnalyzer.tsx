@@ -49,7 +49,12 @@ const LiveAnalyzer: React.FC<LiveAnalyzerProps> = ({ onAnalysisComplete }) => {
   };
 
   const handleCaptureAndAnalyze = useCallback(async () => {
-    if (videoRef.current && canvasRef.current && batchNumber.trim()) {
+    if (!batchNumber.trim()) {
+      setError('Batch Number is required.');
+      return;
+    }
+
+    if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
@@ -151,7 +156,7 @@ const LiveAnalyzer: React.FC<LiveAnalyzerProps> = ({ onAnalysisComplete }) => {
             <>
               <button 
                 onClick={handleCaptureAndAnalyze} 
-                disabled={loading || !batchNumber.trim()} 
+                disabled={loading} 
                 className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
